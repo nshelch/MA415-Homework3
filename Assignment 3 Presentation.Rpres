@@ -1,0 +1,162 @@
+Assignment 3 Presentation
+========================================================
+author: Natalya Shelchkova
+date: February 16, 2018
+autosize: true
+
+Present Day 
+========================================================
+
+[According to CNN, US-Mexico border apprehensions hit a 17-year low.](https://www.cnn.com/2017/05/09/politics/border-crossings-apprehensions-down-trump/index.html) However, its important to look at the data in order to analyze trends, thus we will look at:
+
+- The number of apprehensions per sector and analyzing whether there was a significant decrease in those values.
+- Looking at the overall pattern of apprehensions throughout the year per sector.
+
+- Looking at the total number of apprehensions from 2010 to 2017.
+
+
+```{r, echo = FALSE}
+# 2010 Border Patrol Data
+BP_2010 <- read.csv("BP Apprehensions 2010.csv", header = TRUE, stringsAsFactors = FALSE)
+rownames(BP_2010) <- BP_2010[,1]
+
+BP_2010 <-  subset(BP_2010, select= -c(Sector))
+
+BP_2010 <- rbind(BP_2010, colSums(BP_2010))
+rownames(BP_2010) <- c(rownames(BP_2010)[-length(rownames(BP_2010))], "Total")
+
+BP_2010 <- cbind(BP_2010,rowSums(BP_2010))
+colnames(BP_2010) <- c(colnames(BP_2010)[-length(colnames(BP_2010))], "Total")
+
+# 2017 Border Patrol Data
+BP_2017 <- read.csv("PB Apprehensions 2017.csv", header = TRUE, stringsAsFactors = FALSE)
+rownames(BP_2017) <- BP_2017[,1]
+
+BP_2017 <-  subset(BP_2017, select= -c(Sector))
+
+BP_2017 <- rbind(BP_2017, colSums(BP_2017))
+rownames(BP_2017) <- c(rownames(BP_2017)[-length(rownames(BP_2017))], "Total")
+
+BP_2017 <- cbind(BP_2017,rowSums(BP_2017))
+colnames(BP_2017) <- c(colnames(BP_2017)[-length(colnames(BP_2017))], "Total")
+
+```
+Apprehensions by Sector
+========================================================
+Looking at the number of apprehensions by Sector from 2010 to 2017 we see that the number of apprehensions in Tucson decreased from 2010 to 2017 however the number of apprehensions in Rio Grande Valley has increased. 
+
+```{r, echo = FALSE, fig.width = 13}
+
+barplot(BP_2010[1:9,13], names.arg = rownames(BP_2010)[1:9], 
+        las=1,
+        axes = "TRUE",
+        main="2010 Border Patrol Apprehensions by Sector",
+        border="black",
+        col=rainbow(9),
+        font.lab = 2)
+```
+Apprehensions by Sector
+========================================================
+```{r, echo = FALSE, fig.width = 13}
+
+barplot(BP_2017[1:9,13], names.arg = rownames(BP_2017)[1:9], 
+        las=1,
+        axes = "TRUE",
+        main="2017 Border Patrol Apprehensions by Sector",
+        border="black",
+        col= rainbow(9),
+        font.lab = 2)
+
+```
+Apprehensions by Sector
+========================================================
+The maximum number of total apprehensions however, has not decreased significantly
+```{r echo = FALSE}
+# Finds the index of the maximum number of apprehensions
+max_app_idx_2010 <- match(max(BP_2010[1:9,13]), BP_2010[1:9,13])
+max_app_idx_2017 <- match(max(BP_2017[1:9,13]), BP_2017[1:9,13])
+
+# Performs a statistical test
+t.test(BP_2010[max_app_idx_2010,1:12], BP_2017[max_app_idx_2017,1:12])
+
+```
+
+Apprehensions by Month
+========================================================
+In 2010, the most apprehensions occured in the months March - May, while in 2010 the most apprehensions occured during October - December.
+ 
+```{r, echo = FALSE, fig.width = 9}
+
+matplot(1:12, t(BP_2010[1:9,1:12]), type = "l",
+     main = "2010 Border Patrol Apprehensions by Month",
+     las=2,
+     xaxt = "n",
+     xlab = "",
+     ylab = "",
+     lwd = 2,
+     lty = "solid",
+     col = rainbow(9),
+     font.lab = 2)
+     axis(1, at = 1:12, colnames(BP_2010)[1:12], las = 2)
+legend("topright", rownames(BP_2010)[1:9], cex=0.8, fill=rainbow(9))
+
+```
+Apprehensions by Month
+========================================================
+```{r, echo = FALSE, fig.width=9}
+
+matplot(1:12, t(BP_2017[1:9,1:12]), type = "l",
+     main = "2017 Border Patrol Apprehensions by Month",
+     las=2,
+     xaxt = "n",
+     xlab = "",
+     ylab = "",
+     lwd = 2,
+     lty = "solid",
+     col = rainbow(9),
+     font.lab = 2)
+     axis(1, at = 1:12, colnames(BP_2017)[1:12], las = 2)
+legend("topright", rownames(BP_2017)[1:9], cex=0.8, fill=rainbow(9))
+
+```
+Apprehensions by Month
+========================================================
+However again, this difference is not significant.
+
+```{r echo = FALSE}
+
+max_app_month_2010 <- order(BP_2010[10,1:12], decreasing = TRUE)[1:3]
+max_app_month_2017 <- order(BP_2017[10,1:12], decreasing = TRUE)[1:3]
+
+t.test(BP_2010[1:9,max_app_month_2010], BP_2017[1:9,max_app_month_2017])
+
+```
+
+Time Series/Summary
+========================================================
+
+Data shows that the number of apprehensions has steadily decreased since 2000 with 2017 reaching a new minimum.
+
+```{r, echo=FALSE, fig.width=10}
+
+BPS <- read.csv("PB monthly summaries.csv", header = TRUE, stringsAsFactors = FALSE)
+# transforms BPS matrix into a vector and reverses it so values go from 2010 - 
+BPS <- BPS[nrow(BPS):1,]
+BPS_vector <- as.vector(t(BPS[1:18, 2:13]))
+BPS_ts <- ts(BPS_vector, start = c(2000,10), frequency=12)
+# adding mean apprehension per year 
+BPS <- cbind(BPS,rowMeans(BPS))
+colnames(BPS) <- c(colnames(BPS)[-length(colnames(BPS))], "Average")
+
+ts.plot(BPS_ts, gpars=list(xlab="Year", ylab="Apprehensions", lty=c(1:3),
+        main = "Time Series of Apprehensions from 2000 to 2017",
+        lwd = 2,
+        font.lab = 2,
+        col = 'magenta'))
+for (ii in 1:17){
+  lines(c((BPS[ii,1]+0.5),(BPS[(ii+1),1]+0.5)), c(BPS[ii,14],BPS[ii,14]), col = 'black', lwd = 2)
+  text((2000+ii), (BPS[ii,14]+7000), toString(BPS[ii,1]), col = 'black', font = 2)}
+lines(c(2017.5, 2018.5), c(BPS[18,14],BPS[18,14]), col = 'black', lwd = 2)
+text(2018, (BPS[18,14]+7000), toString(BPS[18,1]), col = 'black', font = 2)
+
+```
